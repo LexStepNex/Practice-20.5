@@ -17,14 +17,12 @@ void fish_in_bucket(std::string fish) {
 
 void remove_fish_from_river(int positionFish, int sizeWord) {
   std::fstream riverWrite("river.txt");
-  std::cout << riverWrite.tellp() << "\n";
-
   riverWrite.seekp(positionFish);
 
-  std::cout << riverWrite.tellp() << "\n";
   for (int i = 0; i <= sizeWord; i++) {
     riverWrite << ' ';
   }
+  
   riverWrite.close();
 }
 
@@ -46,8 +44,12 @@ bool repeat() {
 void space_at_end() {
   std::ifstream river("river.txt", std::ios::ate | std::ios::binary);
 
+  if (!river.is_open()) {
+    return;
+  }
+
   int lastSignPos = river.tellg();
-  lastSignPos --;
+  lastSignPos--;
 
   char lastSign[1];
 
@@ -69,6 +71,12 @@ int main() {
 
   do {
     std::ifstream river("river.txt", std::ios::binary);
+    
+    if (!river.is_open()) {
+      std::cerr << "File \"river.txt\" not found\n";
+      return 0;
+    }
+
     std::string fish;
     std::cout << "Input type of fish: ";
     std::cin >> fish;
@@ -76,8 +84,8 @@ int main() {
 
     std::string fish_in_river = "";
     int wordPosition = river.tellg();
-    while (river >> fish_in_river && fish != fish_in_river) {
-    }
+    while (river >> fish_in_river && fish != fish_in_river);
+
     int sizeWord = fish.length();
     wordPosition = river.tellg();
     wordPosition -= sizeWord;
