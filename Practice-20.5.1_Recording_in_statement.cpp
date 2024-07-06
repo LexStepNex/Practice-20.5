@@ -137,7 +137,6 @@ int main() {
   std::cout << "Fill out the payroll\n";
 
   std::ofstream statement("Statement.txt", std::ios::app);
-
   do {
     std::string name, surname, date, moneyStr;
 
