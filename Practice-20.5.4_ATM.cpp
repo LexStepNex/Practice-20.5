@@ -22,7 +22,7 @@ void unload_from_file(int bills[], int& total_money) {  // выгрузка из
 int banknote_par(int index) {  // номинал банкноты
   int denomination;
   int x = (index + 1);
-  
+
   if (index > 2) x -= 3;
 
   if (x == 3) x = 5;
@@ -31,7 +31,7 @@ int banknote_par(int index) {  // номинал банкноты
     denomination = x * 100;
   else
     denomination = x * 1000;
-    
+
   return denomination;
 }
 
@@ -46,13 +46,7 @@ void print_current(int bills[], int total_money) {
 int sum_money(int bills[]) {  // сумма денег
   int sum = 0;
   for (int i = 0, x = 0; i < 6; i++) {
-    // if (i == 0) sum += bills[i] * 100;
-    // if (i == 1) sum += bills[i] * 200;
-    // if (i == 2) sum += bills[i] * 500;
-    // if (i == 3) sum += bills[i] * 1000;
-    // if (i == 4) sum += bills[i] * 2000;
-    // if (i == 5) sum += bills[i] * 5000;
-      sum += bills[i] * banknote_par(i);
+    sum += bills[i] * banknote_par(i);
   }
   return sum;
 }
@@ -68,8 +62,21 @@ int amount_bills(int bills[]) {  // сумма банкнот
 void deposit_cash(int bills[]) {  // внести наличные
   int deposit_bills[6] = {0};
 
+  do {
+    for (int i = 0; i < 6; i++) {
+      std::cout << "Enter the number of " << banknote_par(i)
+                << " ruble banknotes: ";
+      std::cin >> deposit_bills[i];
+    }
+
+    if (amount_bills(bills) + amount_bills(deposit_bills) > 1000) {
+      std::cout << "The ATM cannot accept so many bills\n"
+                << "Try again\n";
+    }
+  } while (amount_bills(bills) + amount_bills(deposit_bills) > 1000);
+
   for (int i = 0; i < 6; i++) {
-    std::cout << "Enter the number of 100 ruble banknotes: ";
+    bills[i] += deposit_bills[i];
   }
 }
 
@@ -118,6 +125,12 @@ int main() {
 
   unload_from_file(bills, total_money);  // выгрузка из файла
   print_current(bills, total_money);
+  std::cout << amount_bills(bills) << "\n";
+
+  deposit_cash(bills);
+  total_money = sum_money(bills);
+  print_current(bills, total_money);
+
   std::cout << amount_bills(bills);
   atm.close();
 }

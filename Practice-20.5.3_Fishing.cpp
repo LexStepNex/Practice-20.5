@@ -19,7 +19,7 @@ void remove_fish_from_river(int positionFish, int sizeWord) {
   std::fstream riverWrite("river.txt");
   riverWrite.seekp(positionFish);
 
-  for (int i = 0; i <= sizeWord; i++) {
+  for (int i = 0; i < sizeWord; i++) {
     riverWrite << ' ';
   }
 
@@ -67,12 +67,13 @@ void space_at_end() {
 
 int main() {
   space_at_end(); //если нет в конце пробела, то
-                  //не будет читать последнее слово
+  // не будет удалять(заменять на пробелы) последнее слово из реки
+  // так как river.tellg() = -1 без доп. пробела
   int countFish = 0;
 
   do {
     std::ifstream river("river.txt", std::ios::binary);
-    
+
     if (!river.is_open()) {
       std::cerr << "File \"river.txt\" not found\n";
       return 0;
