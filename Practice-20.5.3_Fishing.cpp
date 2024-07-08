@@ -22,7 +22,7 @@ void remove_fish_from_river(int positionFish, int sizeWord) {
   for (int i = 0; i <= sizeWord; i++) {
     riverWrite << ' ';
   }
-  
+
   riverWrite.close();
 }
 
@@ -66,7 +66,8 @@ void space_at_end() {
 }
 
 int main() {
-  space_at_end();
+  space_at_end(); //если нет в конце пробела, то
+                  //не будет читать последнее слово
   int countFish = 0;
 
   do {
