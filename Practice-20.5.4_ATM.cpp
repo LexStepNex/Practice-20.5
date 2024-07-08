@@ -1,8 +1,10 @@
+#include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 
 void upload_to_file(int bills[], int total_money) {  // загрузка в файл
-  std::ofstream atm("ATM.txt");
+  std::ofstream atm("ATM.bin", std::ios::binary);
   for (int i = 0; i < 6; i++) {
     atm << bills[i] << ' ';
   }
@@ -11,7 +13,7 @@ void upload_to_file(int bills[], int total_money) {  // загрузка в фа
 }
 
 void unload_from_file(int bills[], int& total_money) {  // выгрузка из файла
-  std::ifstream atm("ATM.txt");
+  std::ifstream atm("ATM.bin", std::ios::binary);
   for (int i = 0; i < 6; i++) {
     atm >> bills[i];
   }
@@ -36,6 +38,7 @@ int banknote_par(int index) {  // номинал банкноты
 }
 
 void print_current(int bills[], int total_money) {
+  std::cout << "Current bills in ATM: \n";
   for (int i = 0, begin, x = 0, y = 1; i < 6; i++) {
     std::cout << banknote_par(i) << " ruble bills: " << bills[i] << "\n";
     if (x == 5) x = 0;
@@ -60,31 +63,81 @@ int amount_bills(int bills[]) {  // сумма банкнот
 }
 
 void deposit_cash(int bills[]) {  // внести наличные
-  int deposit_bills[6] = {0};
-
+  std::srand(std::time(nullptr));
   do {
-    for (int i = 0; i < 6; i++) {
-      std::cout << "Enter the number of " << banknote_par(i)
-                << " ruble banknotes: ";
-      std::cin >> deposit_bills[i];
-    }
+    bills[rand() % 6]++;
+  } while (amount_bills(bills) < 1000);
 
-    if (amount_bills(bills) + amount_bills(deposit_bills) > 1000) {
-      std::cout << "The ATM cannot accept so many bills\n"
-                << "Try again\n";
-    }
-  } while (amount_bills(bills) + amount_bills(deposit_bills) > 1000);
-
-  for (int i = 0; i < 6; i++) {
-    bills[i] += deposit_bills[i];
-  }
+  std::cout << "The ATM is completely full\n\n";
 }
 
-void cash_withdrawal() {  // снятие наличных
+bool valid_input_cash(std::string cash) {
+  int lenCash = cash.length();
+  for (int i = 0; i < lenCash; i++) {
+    if (!isdigit(cash[i])) {
+      std::cout << "Please enter the cash amount as a positive number, try again.\n";
+      return false;
+    }
+  }
+
+  if (stoi(cash) % 100 != 0) {
+    std::cout << "Enter an amount that is a multiple of 100 and try again.\n";
+    return false;
+  }
+
+  return true;
+}
+
+void cash_withdraw(int bills[], int total_money) {  // снятие наличных
+  int bills_copy[6] = {0};
+  std::string moneyStr;
+  do {
+    std::cout << "Enter the amount you want to withdraw: ";
+    std::cin >> moneyStr;
+  } while (!valid_input_cash(moneyStr));
+
+  int money = stoi(moneyStr);
+  if (money > total_money) {
+    std::cout << "There is not enough money in the ATM\n\n";
+    return;
+  }
+  for (int i = 5; i >= 0;) {
+    if (bills_copy[i] < bills[i] && money >= banknote_par(i)) {
+      bills_copy[i]++;
+      money -= banknote_par(i);
+    } else {
+      i--;
+    }
+  }
+  if (money != 0) {
+    std::cout << "This amount cannot be withdrawn, there are not enough bills "
+                 "in the ATM.\n\n";
+    return;
+  } else {
+    for (int i = 0; i < 6; i++) {
+      bills[i] -= bills_copy[i];
+    }
+  }
+  std::cout << "The desired amount has been issued\n\n";
+}
+
+bool possibilities(int bills[], std::string answer) {
+  if (answer != "+" && answer != "-") return false;
+
+  if (answer == "+" && amount_bills(bills) >= 1000) {
+    std::cout << "ATM is already full.\n\n";
+    return false;
+  }
+
+  if (answer == "-" && amount_bills(bills) == 0) {
+    std::cout << "Unfortunately, there is no money in the ATM.\n\n";
+    return false;
+  }
+  return true;
 }
 
 bool valid_file_atm() {  // проверка наличия/валидности файла
-  std::ifstream atm("ATM.txt");
+  std::ifstream atm("ATM.bin");
   int element, countElement = 0;
   int bills[6] = {0};
   int total_money = 0;
@@ -105,6 +158,29 @@ bool valid_file_atm() {  // проверка наличия/валидности
   return true;
 }
 
+std::string lower_case(std::string str) {
+  int sizeStr = str.size();
+  for (int i = 0; i < sizeStr; i++) {
+    str[i] = std::tolower(str[i]);
+  }
+  return str;
+}
+
+bool repeat() {
+  std::string answer;
+  std::cout << "Want to add more data?\n";
+  do {
+    std::cout << "Input \"yes\" or \"no\": ";
+    std::cin >> answer;
+    answer = lower_case(answer);
+  } while (answer != "yes" && answer != "no");
+
+  if (answer == "yes")
+    return true;
+  else
+    return false;
+}
+
 // банкомат с помощью массива
 //  i = 0 - 100
 //  i = 1 - 200
@@ -119,18 +195,28 @@ int main() {
     return 0;
   }
 
-  std::ifstream atm("ATM.txt");
   int bills[6] = {0};
   int total_money = 0;
+  do {
+    unload_from_file(bills, total_money);  // выгрузка из файла
+    print_current(bills, total_money);
 
-  unload_from_file(bills, total_money);  // выгрузка из файла
-  print_current(bills, total_money);
-  std::cout << amount_bills(bills) << "\n";
+    std::string options;
+    do {
+      std::cout << "Enter + to fill the ATM with money\n";
+      std::cout << "Enter – to withdraw money.\n";
+      std::cout << "Input + or -: ";
+      std::cin >> options;
+    } while (!possibilities(bills, options));
 
-  deposit_cash(bills);
-  total_money = sum_money(bills);
-  print_current(bills, total_money);
+    if (options == "+") deposit_cash(bills); //заполнение деньгами
+    if (options == "-") cash_withdraw(bills, total_money); //Снятие наличных
 
-  std::cout << amount_bills(bills);
-  atm.close();
+    total_money = sum_money(bills);
+    print_current(bills, total_money);
+
+    upload_to_file(bills, total_money); // загрузка в файл
+  } while (repeat());
+
+  std::cout << "You have successfully exited the program. Have a good day.\n";
 }
