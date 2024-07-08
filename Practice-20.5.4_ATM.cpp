@@ -75,7 +75,8 @@ bool valid_input_cash(std::string cash) {
   int lenCash = cash.length();
   for (int i = 0; i < lenCash; i++) {
     if (!isdigit(cash[i])) {
-      std::cout << "Please enter the cash amount as a positive number, try again.\n";
+      std::cout
+          << "Please enter the cash amount as a positive number, try again.\n";
       return false;
     }
   }
@@ -102,10 +103,18 @@ void cash_withdraw(int bills[], int total_money) {  // снятие наличн
     return;
   }
   for (int i = 5; i >= 0;) {
-    if (bills_copy[i] < bills[i] && money >= banknote_par(i)) {
-      bills_copy[i]++;
-      money -= banknote_par(i);
-    } else {
+    int quantity_bills = money / banknote_par(i);
+
+    if (quantity_bills <= bills[i] && money >= banknote_par(i)) {
+      bills_copy[i] = quantity_bills;
+      money -= banknote_par(i) * bills_copy[i];
+    } else if (money >= banknote_par(i)) {
+      bills_copy[i] = bills[i];
+      money -= banknote_par(i) * bills_copy[i];
+      i--;
+    }
+
+    if (money < banknote_par(i)) {
       i--;
     }
   }
@@ -209,13 +218,13 @@ int main() {
       std::cin >> options;
     } while (!possibilities(bills, options));
 
-    if (options == "+") deposit_cash(bills); //заполнение деньгами
-    if (options == "-") cash_withdraw(bills, total_money); //Снятие наличных
+    if (options == "+") deposit_cash(bills);  // заполнение деньгами
+    if (options == "-") cash_withdraw(bills, total_money);  // Снятие наличных
 
     total_money = sum_money(bills);
     print_current(bills, total_money);
 
-    upload_to_file(bills, total_money); // загрузка в файл
+    upload_to_file(bills, total_money);  // загрузка в файл
   } while (repeat());
 
   std::cout << "You have successfully exited the program. Have a good day.\n";
